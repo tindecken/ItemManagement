@@ -1,0 +1,17 @@
+{
+  "name": "bunsqlite",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.20.13"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.3.0",
+    "crypto": "^1.0.1",
+    "drizzle-orm": "^0.29.3"
+  }
+}
