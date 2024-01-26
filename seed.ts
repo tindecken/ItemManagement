@@ -38,17 +38,19 @@ await db.insert(schema.projects).values([
   }
 ])
 
-// userProjectRole
-await db.insert(schema.userProjectRole).values([
+// userProjectRoleConfigure
+await db.insert(schema.userProjectRoleConfigure).values([
   {
     userId: 1,
     projectId: 1,
-    roleId: 1
+    roleId: 1,
+    isDefault: true,
   },
   {
     userId: 2,
     projectId: 1,
-    roleId: 2
+    roleId: 2,
+    isDefault: false
   }
 ])
 
@@ -87,36 +89,42 @@ await db.insert(schema.items).values([
     name: 'Item 1',
     description: 'Item 1',
     status: 'active',
+    type: 'office',
     containerId: 1
   },
   {
     name: 'Item 2',
     description: 'Item 2',
     status: 'active',
+    type: 'office',
     containerId: 1
   },
   {
     name: 'Item 3',
     description: 'Item 3',
     status: 'active',
+    type: 'medecine',
     subContainerId: 1
   },
   {
     name: 'Item 4',
     description: 'Item 4',
     status: 'active',
+    type: 'electric',
     subContainerId: 1
   },
   {
     name: 'Item 5',
     description: 'Item 5',
     status: 'active',
+    type: 'office',
     subContainerId: 2
   },
   {
     name: 'Item 6',
     description: 'Item 6',
     status: 'active',
+    type: 'computer',
     subContainerId: 2
   }
 
