@@ -11,8 +11,9 @@ export const users = sqliteTable("users", {
 
 export const projects = sqliteTable("projects", {
 	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-	name: text("name").notNull(),
+	name: text("name").notNull().unique(),
 	description: text("description"),
+	logo: blob('logo'),
 	createdDate: integer('createdDate', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`), // Date
 	createdByUserId: integer("createdByUserId").notNull().references(() => users.id),
 })
@@ -58,7 +59,7 @@ export const projectContainerTypes = sqliteTable("projectContainerTypes", {
 
 export const containers = sqliteTable("containers", {
 	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-	name: text("name").notNull(),
+	name: text("name").notNull().unique(),
 	description: text("description"),
 	status: text("status"),
 	screenshot1: blob('screenshot1'),
@@ -74,7 +75,7 @@ export const containers = sqliteTable("containers", {
 
 export const subContainers = sqliteTable("subContainers", {
 	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-	name: text("name"),
+	name: text("name").unique(),
 	description: text("description"),
 	status: text("status"),
 	screenshot1: blob('screenshot1'),
@@ -90,7 +91,7 @@ export const subContainers = sqliteTable("subContainers", {
 
 export const items = sqliteTable("items", {
 	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-	name: text("name").notNull(),
+	name: text("name").notNull().unique(),
 	description: text("description"),
 	boughtDate: integer('boughtDate', { mode: 'timestamp' }), // Date
 	expiredDate: integer('expiredDate', { mode: 'timestamp' }), // Date

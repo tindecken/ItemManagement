@@ -1,11 +1,11 @@
 import { Elysia, t } from 'elysia'
 import { cookie } from '@elysiajs/cookie'
 import { jwt } from '@elysiajs/jwt'
-import * as schema from "./schema"
 import { db } from "./db"
 import { and, eq } from 'drizzle-orm'
 import { bearer } from '@elysiajs/bearer'
 import { checkAuthenticated } from './middlewares/checkAuthenticated'
+import { projects, users } from './schema'
 
 const app = new Elysia()
     .use(jwt({
@@ -17,8 +17,8 @@ const app = new Elysia()
     .use(bearer())
     .use(checkAuthenticated)
     .post('/auth', async ({ set, body, jwt, cookie, setCookie }) => {
-        const user = await db.select().from(schema.users).where(
-            eq(schema.users.userName, body.userName)
+        const user = await db.select().from(users).where(
+            eq(users.userName, body.userName)
         ).limit(1)
         if (user.length > 0) {
             if (await Bun.password.verify(body.password, user[0].password)) {
@@ -91,5 +91,59 @@ const app = new Elysia()
         console.log('header', headers)
         console.log('bearer', bearer)
         return bearer
+    })
+    .post('/projects/create', async ({body}) => {
+        const blobLogo = await body.logo?.text()
+        const project = {
+            name: body.name,
+            description: body.description,
+            logo: blobLogo,
+            createdByUserId: 1
+        }
+        const createdProjectId = await db.insert(projects).values(project).returning({ name: projects.name });
+        return {
+            success: true,
+            data: createdProjectId[0],
+            message: `Created project ${body.name} successfully`
+        }
+    }, {
+        beforeHandle({set, isAuthenticated}) {
+            if (!isAuthenticated) {
+                set.status = 401
+                return {
+                    success: false,
+                    data: null,
+                    message: 'Unauthorized'
+                }
+            }
+        },
+        body: t.Object({
+            name: t.String({
+                maxLength: 100
+            }),
+            description: t.Nullable(t.String({
+                maxLength: 5000
+            })),
+            logo: t.Nullable(t.File())
+        })
+    })
+    .get('/projects/logo/:id', async ({set, params}) => {
+        const logo = await db.query.projects.findFirst()
+        // console.log('logo', logo)
+        // const logo = await db.select({logo: projects.logo}).from(projects).where(eq(projects.id, params.id)).limit(1)
+        console.log('logo', logo)
+        if (!logo) {
+            set.status = 404
+            return {
+                success: false,
+                data: null,
+                message: `There's no logo for project ${params.id}`
+            }
+        }
+        return {
+            success: true,
+            data: logo,
+            message: 'Successully get logo'
+        }
     })
 	.listen(3000)
