@@ -6,8 +6,17 @@ import { and, eq } from 'drizzle-orm'
 import { bearer } from '@elysiajs/bearer'
 import { checkAuthenticated } from './middlewares/checkAuthenticated'
 import { projects, users } from './schema'
+import { swagger } from '@elysiajs/swagger'
 
 const app = new Elysia()
+    .use(swagger({
+        documentation: {
+            info: {
+                title: 'Item Management Documentation',
+                version: '0.0.1',
+            }
+        }
+    }))
     .use(jwt({
         name: 'jwt',
         secret: Bun.env.JWT_SECRET!,
@@ -16,45 +25,50 @@ const app = new Elysia()
     .use(cookie())
     .use(bearer())
     .use(checkAuthenticated)
-    .post('/auth', async ({ set, body, jwt, cookie, setCookie }) => {
-        const user = await db.select().from(users).where(
-            eq(users.userName, body.userName)
-        ).limit(1)
-        if (user.length > 0) {
-            if (await Bun.password.verify(body.password, user[0].password)) {
-                const accessToken = await jwt.sign({
-                    userName: user[0].userName,
-                    name: user[0].name || '',
-                    email: user[0].email,
-                    id: user[0].id
-                })
-                setCookie('accessToken', accessToken, {
-                    maxAge: 15 * 86400,
-                })
-                return {
-                    success: true,
-                    data: accessToken,
-                    message: 'Login successfully'
-                }
-            } else {
-                return {
-                    success: false,
-                    data: null,
-                    message: 'Incorrect username or password'
+    .post('/auth',
+        async ({ set, body, jwt, cookie, setCookie }) => {
+            const user = await db.select().from(users).where(
+                eq(users.userName, body.userName)
+            ).limit(1)
+            if (user.length > 0) {
+                if (await Bun.password.verify(body.password, user[0].password)) {
+                    const accessToken = await jwt.sign({
+                        userName: user[0].userName,
+                        name: user[0].name || '',
+                        email: user[0].email,
+                        id: user[0].id
+                    })
+                    setCookie('accessToken', accessToken, {
+                        maxAge: 15 * 86400,
+                    })
+                    return {
+                        success: true,
+                        data: accessToken,
+                        message: 'Login successfully'
+                    }
+                } else {
+                    return {
+                        success: false,
+                        data: null,
+                        message: 'Incorrect username or password'
+                    }
                 }
             }
-        }
-        return {
-            success: false,
-            data: null,
-            message: 'User is not exists!'
-        }
-    }, {
-        body: t.Object({
-            userName: t.String(),
-            password: t.String()
+            return {
+                success: false,
+                data: null,
+                message: 'User is not exists!'
+            }
+        },
+        {
+            body: t.Object({
+                userName: t.String(),
+                password: t.String()
+            }),
+            detail: {
+                description: 'Login with username and password'
+            }
         })
-    })
     .get('/sign/:name', async ({ jwt, cookie, setCookie, params }) => {
         const signed = await jwt.sign({ a: 'a', b: 'b' })
         setCookie('auth', signed, {
@@ -128,17 +142,15 @@ const app = new Elysia()
         })
     })
     .get('/projects/logo/:id', async ({ set, params }) => {
-        const logo = await db.query.projects.findMany({
+        const projectLogo = await db.query.projects.findMany({
             columns: {
-                id: true
+                logo: true
             },
             where: eq(projects.id, params.id ? parseInt(params.id) : 0),
             limit: 1
         })
-        // console.log('logo', logo)
-        // const logo = await db.select({ logo: projects.logo }).from(projects).where(eq(projects.id, params.id)).limit(1)
-        console.log('logo', logo)
-        if (!logo) {
+        console.log('projectLogo', projectLogo)
+        if (projectLogo.length === 0) {
             set.status = 404
             return {
                 success: false,
@@ -148,7 +160,7 @@ const app = new Elysia()
         }
         return {
             success: true,
-            data: logo,
+            data: projectLogo[0].logo,
             message: 'Successully get logo'
         }
     })
