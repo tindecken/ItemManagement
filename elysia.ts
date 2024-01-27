@@ -56,17 +56,17 @@ const app = new Elysia()
         })
     })
     .get('/sign/:name', async ({ jwt, cookie, setCookie, params }) => {
-        const signed = await jwt.sign({a: 'a', b: 'b'})
+        const signed = await jwt.sign({ a: 'a', b: 'b' })
         setCookie('auth', signed, {
             httpOnly: true,
-            maxAge: 7*86400,
+            maxAge: 7 * 86400,
         })
 
         return `Sign in as ${cookie.auth}`
     })
-	.get('/profile', async ({ jwt, set, cookie: {auth}}) => {
+    .get('/profile', async ({ jwt, set, cookie: { auth } }) => {
         const profile = await jwt.verify(auth)
-        if (!profile){
+        if (!profile) {
             set.status = 401
             return 'Unauthorized'
         }
@@ -76,7 +76,7 @@ const app = new Elysia()
         set.status = 200
         return 'hi'
     }, {
-        beforeHandle({set, isAuthenticated}) {
+        beforeHandle({ set, isAuthenticated }) {
             if (!isAuthenticated) {
                 set.status = 401
                 return {
@@ -92,7 +92,7 @@ const app = new Elysia()
         console.log('bearer', bearer)
         return bearer
     })
-    .post('/projects/create', async ({body}) => {
+    .post('/projects/create', async ({ body }) => {
         const blobLogo = await body.logo?.text()
         const project = {
             name: body.name,
@@ -107,7 +107,7 @@ const app = new Elysia()
             message: `Created project ${body.name} successfully`
         }
     }, {
-        beforeHandle({set, isAuthenticated}) {
+        beforeHandle({ set, isAuthenticated }) {
             if (!isAuthenticated) {
                 set.status = 401
                 return {
@@ -127,10 +127,16 @@ const app = new Elysia()
             logo: t.Nullable(t.File())
         })
     })
-    .get('/projects/logo/:id', async ({set, params}) => {
-        const logo = await db.query.projects.findFirst()
+    .get('/projects/logo/:id', async ({ set, params }) => {
+        const logo = await db.query.projects.findMany({
+            columns: {
+                id: true
+            },
+            where: eq(projects.id, params.id ? parseInt(params.id) : 0),
+            limit: 1
+        })
         // console.log('logo', logo)
-        // const logo = await db.select({logo: projects.logo}).from(projects).where(eq(projects.id, params.id)).limit(1)
+        // const logo = await db.select({ logo: projects.logo }).from(projects).where(eq(projects.id, params.id)).limit(1)
         console.log('logo', logo)
         if (!logo) {
             set.status = 404
@@ -146,4 +152,4 @@ const app = new Elysia()
             message: 'Successully get logo'
         }
     })
-	.listen(3000)
+    .listen(3000)
