@@ -71,46 +71,28 @@ const app = new Elysia()
         })
     .post('/auth/register',
         async ({ set, body, jwt, cookie, setCookie }) => {
-            const user = await db.select().from(users).where(
-                eq(users.userName, body.userName)
-            ).limit(1)
-            if (user.length > 0) {
-                if (await Bun.password.verify(body.password, user[0].password)) {
-                    const accessToken = await jwt.sign({
-                        userName: user[0].userName,
-                        name: user[0].name || '',
-                        email: user[0].email,
-                        id: user[0].id
-                    })
-                    setCookie('accessToken', accessToken, {
-                        maxAge: 15 * 86400,
-                    })
-                    return {
-                        success: true,
-                        data: accessToken,
-                        message: 'Login successfully'
-                    }
-                } else {
-                    return {
-                        success: false,
-                        data: null,
-                        message: 'Incorrect username or password'
-                    }
-                }
-            }
+            const newUser = await db.insert(users).values({
+                userName: body.userName,
+                name: body.name,
+                email: body.email,
+                password: await Bun.password.hash(body.password),
+                createdDate: new Date()
+            }).returning()
             return {
-                success: false,
-                data: null,
-                message: 'User is not exists!'
+                success: true,
+                data: newUser,
+                message: `Successfully created user ${body.userName}`
             }
         },
         {
             body: t.Object({
                 userName: t.String(),
+                name: t.String(),
+                email: t.String(),
                 password: t.String()
             }),
             detail: {
-                description: 'Login with username and password'
+                description: 'Register new user'
             }
         })
     .get('/sign/:name', async ({ jwt, cookie, setCookie, params }) => {
