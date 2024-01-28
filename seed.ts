@@ -19,13 +19,15 @@ await db.insert(schema.users).values([
     userName: 'tindecken',
     name: 'Tindecken',
     email: 'tindecken@gmail.com.com',
-    password: await Bun.password.hash('rivaldo')
+    password: await Bun.password.hash('rivaldo'),
+    createdDate: new Date()
   },
   {
     userName: 'thaihoang85',
     name: 'Thai Hoang',
     email: 'thaihoang85@gmail.com.com',
-    password: await Bun.password.hash('rivaldo')
+    password: await Bun.password.hash('rivaldo'),
+    createdDate: new Date()
   }
 ])
 console.log(`Seeding complete.`);
