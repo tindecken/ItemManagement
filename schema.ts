@@ -7,6 +7,7 @@ export const users = sqliteTable("users", {
 	name: text("name"),
 	email: text("email").notNull().unique(),
 	password: text("password").notNull().unique(),
+	createdDate: integer('createdDate', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`) // Date
 });
 
 export const projects = sqliteTable("projects", {
